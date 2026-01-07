@@ -15,10 +15,10 @@ local StarterGui = game:GetService("StarterGui")
 local KEY_DATABASE_URL = "https://raw.githubusercontent.com/PanzzHack/key/refs/heads/main/keyword.lua"
 
 -- SCRIPT UTAMA (Ganti ini dengan link script Cheat/GUI asli kamu)
-local MAIN_SCRIPT_URL = "https://pastebin.com/raw/LINK_SCRIPT_UTAMA_KAMU"
+local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/power-datebase/manu-utama/refs/heads/main/231011402540123.lua"
 
 -- Link Tombol
-local KEY_LINK = "https://PowerHub.com/"
+local KEY_LINK = "https://powerhubofficial.netlify.app/"
 local DISCORD_LINK = "https://discord.gg/exb7hSPZg"
 
 -- Nama file untuk simpan data di HP
