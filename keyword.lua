@@ -12,7 +12,7 @@ local StarterGui = game:GetService("StarterGui")
 --// ==========================================
 
 -- DATABASE KEY DARI GITHUB KAMU
-local KEY_DATABASE_URL = "https://raw.githubusercontent.com/PanzzHack/key/refs/heads/main/keyword.lua"
+local KEY_DATABASE_URL = "https://raw.githubusercontent.com/power-datebase/database-key/refs/heads/main/key.lua"
 
 -- SCRIPT UTAMA (Ganti ini dengan link script Cheat/GUI asli kamu)
 local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/power-datebase/manu-utama/refs/heads/main/231011402540123.lua"
