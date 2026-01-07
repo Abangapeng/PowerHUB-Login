@@ -1,1450 +1,464 @@
-<!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PowerHUB - Marketplace Source Code Terlengkap</title>
-    <meta property="og:title" content="PowerHUB - Beli Source Code Murah">
-    <meta property="og:description" content="Temukan ribuan source code website, aplikasi mobile, dan bot berkualitas.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80">
-    <meta property="og:type" content="website">
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LinkingService = game:GetService("LinkingService")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
+
+--// ==========================================
+--// KONFIGURASI
+--// ==========================================
+
+-- DATABASE KEY DARI GITHUB KAMU
+local KEY_DATABASE_URL = "https://raw.githubusercontent.com/PanzzHack/key/refs/heads/main/keyword.lua"
+
+-- SCRIPT UTAMA (Ganti ini dengan link script Cheat/GUI asli kamu)
+local MAIN_SCRIPT_URL = "https://pastebin.com/raw/LINK_SCRIPT_UTAMA_KAMU"
+
+-- Link Tombol
+local KEY_LINK = "https://PowerHub.com/"
+local DISCORD_LINK = "https://discord.gg/exb7hSPZg"
+
+-- Nama file untuk simpan data di HP
+local FILE_NAME = "PowerHUB_Key.txt" 
+
+--// ==========================================
+--// SYSTEM SETUP
+--// ==========================================
+
+local function GetSafeParent()
+    local success, result = pcall(function() return gethui() end)
+    if success and result then return result end
+    success, result = pcall(function() return game:GetService("CoreGui") end)
+    if success and result then return result end
+    local plr = Players.LocalPlayer
+    if not plr then plr = Players:GetPropertyChangedSignal("LocalPlayer"):Wait() end
+    return plr:WaitForChild("PlayerGui")
+end
+
+local parent = GetSafeParent()
+if parent:FindFirstChild("PowerHUB_UI") then
+    parent.PowerHUB_UI:Destroy()
+end
+
+--// ==========================================
+--// FUNGSI SAVE/LOAD
+--// ==========================================
+
+local function SaveKey(key)
+    if writefile then
+        pcall(function() writefile(FILE_NAME, key) end)
+    end
+end
+
+local function LoadKey()
+    if isfile and isfile(FILE_NAME) then
+        local success, result = pcall(function() return readfile(FILE_NAME) end)
+        if success then return result end
+    end
+    return nil
+end
+
+--// ==========================================
+--// UI CREATION
+--// ==========================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PowerHUB_UI"
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = parent
+ScreenGui.Enabled = false -- Hidden by default (Auto-Check first)
+
+-- MAIN FRAME
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 350, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -125)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+-- GRADASI BORDER (BIRU-UNGU)
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Thickness = 3
+MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Parent = MainFrame
+
+local MainGradient = Instance.new("UIGradient")
+MainGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(0, 255, 255)),   -- Cyan
+    ColorSequenceKeypoint.new(0.25, Color3.fromRGB(0, 100, 255)),   -- Biru
+    ColorSequenceKeypoint.new(0.50, Color3.fromRGB(150, 0, 255)),   -- Ungu
+    ColorSequenceKeypoint.new(0.75, Color3.fromRGB(0, 100, 255)),   -- Biru
+    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 255, 255))    -- Cyan
+})
+MainGradient.Parent = MainStroke
+
+task.spawn(function()
+    local rotation = 0
+    while MainStroke.Parent do
+        rotation = rotation + 2
+        MainGradient.Rotation = rotation
+        task.wait(0.03)
+    end
+end)
+
+-- HEADER & TITLE
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -60, 0, 40)
+Title.Position = UDim2.new(0, 15, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "PowerHUB"
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 20
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Parent = MainFrame
+
+-- RGB TITLE ANIMATION
+task.spawn(function()
+    while Title.Parent do
+        local t = tick()
+        local color = Color3.fromHSV((t % 5) / 5, 1, 1) 
+        Title.TextColor3 = color
+        task.wait(0.05)
+    end
+end)
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 40, 0, 40)
+CloseBtn.Position = UDim2.new(1, -45, 0, 5)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.Parent = MainFrame
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- CONTENT
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -30, 1, -55)
+ContentFrame.Position = UDim2.new(0, 15, 0, 50)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 12)
+UIListLayout.Parent = ContentFrame
+
+-- INPUT KEY
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(1, 0, 0, 38)
+InputBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+InputBox.Text = ""
+InputBox.PlaceholderText = "Paste Key Here..."
+InputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.Font = Enum.Font.Gotham
+InputBox.TextSize = 14
+InputBox.Parent = ContentFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 6)
+InputCorner.Parent = InputBox
+
+local InputStroke = Instance.new("UIStroke")
+InputStroke.Thickness = 1
+InputStroke.Color = Color3.fromRGB(60, 60, 60)
+InputStroke.Parent = InputBox
+
+-- BUTTONS
+local ButtonRow = Instance.new("Frame")
+ButtonRow.Size = UDim2.new(1, 0, 0, 38)
+ButtonRow.BackgroundTransparency = 1
+ButtonRow.Parent = ContentFrame
+
+local RowLayout = Instance.new("UIListLayout")
+RowLayout.FillDirection = Enum.FillDirection.Horizontal
+RowLayout.Padding = UDim.new(0, 10)
+RowLayout.Parent = ButtonRow
+
+local function CreateButton(text, parentFrame)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0.5, -5, 1, 0)
+    Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 12
+    Btn.Parent = parentFrame
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                        serif: ['Playfair Display', 'serif'],
-                    },
-                    colors: {
-                        indigo: { 50:'#eef2ff', 100:'#e0e7ff', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 900: '#312e81' },
-                        slate: { 850: '#152033', 900: '#0f172a', 950: '#020617' },
-                        code: { bg: '#1e293b', text: '#e2e8f0' }
-                    },
-                    animation: {
-                        'bounce-short': 'bounce 0.5s ease-in-out 1',
-                        'fade-in': 'fadeIn 0.5s ease-out forwards',
-                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                    },
-                    keyframes: {
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-                        popIn: { '0%': { opacity: '0', transform: 'scale(0.8)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
-                    },
-                }
-            }
-        }
-    </script>
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Btn
     
-    <script src="https://unpkg.com/lucide@latest"></script>
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Thickness = 1
+    Stroke.Color = Color3.fromRGB(60, 60, 60)
+    Stroke.Parent = Btn
+    return Btn
+end
+
+local GetKeyBtn = CreateButton("GET KEY", ButtonRow)
+local ConfirmBtn = CreateButton("CONFIRM", ButtonRow)
+
+-- DISCORD BUTTON
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(1, 0, 0, 38)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+DiscordBtn.Text = "JOIN DISCORD"
+DiscordBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.TextSize = 12
+DiscordBtn.Parent = ContentFrame
+
+local DiscordCorner = Instance.new("UICorner")
+DiscordCorner.CornerRadius = UDim.new(0, 6)
+DiscordCorner.Parent = DiscordBtn
+
+local DiscordStroke = Instance.new("UIStroke")
+DiscordStroke.Thickness = 1
+DiscordStroke.Color = Color3.fromRGB(60, 60, 60)
+DiscordStroke.Parent = DiscordBtn
+
+--// ==========================================
+--// NOTIFIKASI MODERN
+--// ==========================================
+
+local function ShowNotification(message, isError)
+    local accentColor = isError and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(80, 255, 100)
+    local iconText = isError and "!" or "✓"
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500&display=swap');
+    local NotifFrame = Instance.new("Frame")
+    NotifFrame.Name = "NotifToast"
+    NotifFrame.Size = UDim2.new(0, 260, 0, 40)
+    NotifFrame.Position = UDim2.new(0.5, -130, 0.9, 0)
+    NotifFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    NotifFrame.BackgroundTransparency = 1
+    NotifFrame.ZIndex = 30
+    NotifFrame.Parent = MainFrame
+
+    local NotifCorner = Instance.new("UICorner")
+    NotifCorner.CornerRadius = UDim.new(0, 6)
+    NotifCorner.Parent = NotifFrame
+    
+    local NotifStroke = Instance.new("UIStroke")
+    NotifStroke.Thickness = 1
+    NotifStroke.Color = accentColor
+    NotifStroke.Transparency = 1
+    NotifStroke.Parent = NotifFrame
+
+    local IconFrame = Instance.new("Frame")
+    IconFrame.Size = UDim2.new(0, 24, 0, 24)
+    IconFrame.Position = UDim2.new(0, 8, 0.5, -12)
+    IconFrame.BackgroundColor3 = accentColor
+    IconFrame.BackgroundTransparency = 1
+    IconFrame.ZIndex = 31
+    IconFrame.Parent = NotifFrame
+    
+    local IconCorner = Instance.new("UICorner")
+    IconCorner.CornerRadius = UDim.new(1, 0)
+    IconCorner.Parent = IconFrame
+    
+    local IconLabel = Instance.new("TextLabel")
+    IconLabel.Size = UDim2.new(1, 0, 1, 0)
+    IconLabel.BackgroundTransparency = 1
+    IconLabel.Text = iconText
+    IconLabel.TextColor3 = Color3.fromRGB(30, 30, 30)
+    IconLabel.Font = Enum.Font.GothamBlack
+    IconLabel.TextSize = 14
+    IconLabel.TextTransparency = 1
+    IconLabel.ZIndex = 32
+    IconLabel.Parent = IconFrame
+
+    local MsgLabel = Instance.new("TextLabel")
+    MsgLabel.Size = UDim2.new(1, -40, 1, 0)
+    MsgLabel.Position = UDim2.new(0, 40, 0, 0)
+    MsgLabel.BackgroundTransparency = 1
+    MsgLabel.Text = message
+    MsgLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MsgLabel.Font = Enum.Font.GothamBold
+    MsgLabel.TextSize = 12
+    MsgLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MsgLabel.TextTransparency = 1
+    MsgLabel.ZIndex = 31
+    MsgLabel.Parent = NotifFrame
+
+    local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    TweenService:Create(NotifFrame, tweenInfo, {BackgroundTransparency = 0.1, Position = UDim2.new(0.5, -130, 0.8, 0)}):Play()
+    TweenService:Create(NotifStroke, tweenInfo, {Transparency = 0}):Play()
+    TweenService:Create(IconFrame, tweenInfo, {BackgroundTransparency = 0}):Play()
+    TweenService:Create(IconLabel, tweenInfo, {TextTransparency = 0}):Play()
+    TweenService:Create(MsgLabel, tweenInfo, {TextTransparency = 0}):Play()
+
+    task.wait(2.5)
+
+    local tweenOut = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    TweenService:Create(NotifFrame, tweenOut, {BackgroundTransparency = 1, Position = UDim2.new(0.5, -130, 0.9, 0)}):Play()
+    TweenService:Create(NotifStroke, tweenOut, {Transparency = 1}):Play()
+    TweenService:Create(IconFrame, tweenOut, {BackgroundTransparency = 1}):Play()
+    TweenService:Create(IconLabel, tweenOut, {TextTransparency = 1}):Play()
+    TweenService:Create(MsgLabel, tweenOut, {TextTransparency = 1}):Play()
+
+    task.wait(0.4)
+    NotifFrame:Destroy()
+end
+
+--// ==========================================
+--// LOGIC SYSTEM (AUTO CHECK)
+--// ==========================================
+
+task.spawn(function()
+    -- 1. Cek Key di HP
+    local savedKey = LoadKey()
+    
+    if savedKey then
+        StarterGui:SetCore("SendNotification", {
+            Title = "PowerHUB",
+            Text = "Checking Saved Key...",
+            Duration = 3,
+        })
         
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: rgb(248,250,252);
-            background: linear-gradient(135deg, rgba(248,250,252,1) 0%, rgba(241,245,249,1) 100%);
-            background-attachment: fixed;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .dark body {
-            background: rgb(15,23,42);
-            background: linear-gradient(135deg, rgba(15,23,42,1) 0%, rgba(2,6,23,1) 100%);
-            background-attachment: fixed;
-        }
-
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background-color: rgba(99, 102, 241, 0.5); border-radius: 20px; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        -- 2. Cek ke Database Github
+        local success, response = pcall(function() return game:HttpGet(KEY_DATABASE_URL) end)
         
-        .tag-checkbox:checked + div { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-        .carousel-track { transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
-        .marquee-container { overflow: hidden; white-space: nowrap; }
-        .marquee-content { display: inline-block; animation: marquee 30s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-    </style>
-</head>
-<body class="text-gray-900 dark:text-gray-100 selection:bg-indigo-500 selection:text-white">
-
-    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[120] bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-3 transition-all duration-300 transform -translate-y-24 opacity-0 pointer-events-none border border-gray-100 dark:border-gray-700">
-        <div class="bg-green-100 dark:bg-green-900/30 rounded-full p-1.5"><i data-lucide="check" class="w-4 h-4 text-green-600 dark:text-green-400"></i></div>
-        <span id="toast-message" class="font-semibold text-sm">Berhasil!</span>
-    </div>
-
-    <!-- WELCOME POPUP -->
-    <div id="welcome-popup" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closeWelcomePopup()"></div>
-        <div class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden animate-pop-in border border-indigo-500/20">
-            <button onclick="closeWelcomePopup()" class="absolute top-4 right-4 z-20 bg-black/20 hover:bg-black/40 text-white p-2 rounded-full backdrop-blur-md transition-colors">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-            <div class="relative aspect-video">
-                <img id="popup-img" src="" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
-                <div class="absolute bottom-6 left-6 right-6 text-white">
-                    <span id="popup-tag" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider mb-2 inline-block shadow-lg">New Script</span>
-                    <h3 id="popup-title" class="text-2xl font-bold leading-tight mb-1">Nama Produk</h3>
-                    <p id="popup-msg" class="text-gray-300 text-xs line-clamp-2">Deskripsi promo menarik disini...</p>
-                </div>
-            </div>
-            <div class="p-6 bg-white dark:bg-gray-900">
-                <button onclick="openPopupLink()" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
-                    Lihat Detail <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- DIRECT CHECKOUT MODAL -->
-    <div id="checkout-modal" class="fixed inset-0 z-[160] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCheckoutModal()"></div>
-        <div class="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-gray-200 dark:border-gray-700">
-            <div class="p-6 border-b dark:border-gray-800 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20">
-                <h3 id="checkout-header-title" class="font-bold text-lg dark:text-white flex items-center gap-2">
-                    <i data-lucide="credit-card" class="w-5 h-5 text-indigo-600"></i> Checkout
-                </h3>
-                <button onclick="closeCheckoutModal()" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 dark:text-white">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
+        if success and string.find(response, savedKey) then
+            -- [VALID]
+            StarterGui:SetCore("SendNotification", {
+                Title = "PowerHUB",
+                Text = "Key Valid! Loaded.",
+                Duration = 3,
+            })
             
-            <div class="p-6 overflow-y-auto max-h-[70vh] custom-scroll relative">
-                
-                <!-- Main Checkout View -->
-                <div id="checkout-main-view" class="space-y-6">
-                    <!-- Product Summary -->
-                    <div id="product-summary-card" class="flex gap-4 items-start bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <img id="checkout-img" src="" class="w-20 h-20 rounded-lg object-cover flex-shrink-0 bg-gray-200">
-                        <div class="flex-1">
-                            <h4 id="checkout-title" class="font-bold text-sm dark:text-white line-clamp-2 mb-1">Nama Produk</h4>
-                            <div class="flex items-center gap-2">
-                                <span id="checkout-price" class="text-indigo-600 font-bold text-lg">Rp 0</span>
-                                <span id="checkout-original-price" class="text-xs text-gray-400 line-through hidden">Rp 0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PAID FORM: Name & Email -->
-                    <div id="customer-info-section" class="space-y-4 hidden">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama Anda</label>
-                            <input type="text" id="cust-name" placeholder="Masukkan Nama Lengkap" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Email (Untuk kirim file)</label>
-                            <input type="email" id="cust-email" placeholder="contoh@email.com" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        </div>
-                        <!-- Voucher -->
-                        <div id="voucher-section">
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kode Promo</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="voucher-input" placeholder="KODE" class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm dark:text-white uppercase font-mono">
-                                <button onclick="applyVoucher()" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Pakai</button>
-                            </div>
-                            <p id="voucher-message" class="text-xs mt-1 hidden"></p>
-                        </div>
-                        <!-- Total -->
-                        <div class="mt-4 pt-4 border-t border-dashed border-gray-200 dark:border-gray-700 space-y-2">
-                            <div class="flex justify-between text-sm text-gray-500"><span>Subtotal</span><span id="summary-subtotal">Rp 0</span></div>
-                            <div id="summary-discount-row" class="flex justify-between text-sm text-green-600 font-bold hidden"><span>Diskon <span id="summary-voucher-code"></span></span><span id="summary-discount">-Rp 0</span></div>
-                            <div class="flex justify-between text-xl font-bold dark:text-white pt-2"><span>Total Bayar</span><span id="summary-total" class="text-indigo-600">Rp 0</span></div>
-                        </div>
-                    </div>
-                    
-                    <!-- FREE FORM: Password Unlock -->
-                    <div id="key-input-container" class="hidden animate-fade-in space-y-4">
-                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 p-4 rounded-xl text-center">
-                            <p class="text-xs text-yellow-800 dark:text-yellow-200 font-bold mb-1">🔒 KONTEN TERKUNCI</p>
-                            <p class="text-[10px] text-yellow-600 dark:text-yellow-400">Masukkan password untuk membuka akses produk ini.</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-indigo-500 mb-1">Password Akses</label>
-                            <input type="text" id="access-key-input" placeholder="Masukkan Password..." class="w-full bg-gray-50 dark:bg-gray-800 border border-indigo-200 dark:border-indigo-900/50 rounded-xl px-4 py-3 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono tracking-widest text-center">
-                        </div>
-                        <!-- Link Generator Key -->
-                        <a href="#" id="get-key-btn" target="_blank" class="w-full block bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 py-3 rounded-xl text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-center border border-gray-200 dark:border-gray-700">
-                            👉 Belum punya password? Klik Disini
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Success View (Detail Transaksi Free - IMPROVED) -->
-                <div id="unlock-success-view" class="hidden flex-col items-center justify-center py-2 animate-fade-in text-center relative">
-                    
-                    <!-- Success Icon & Title -->
-                    <div class="w-16 h-16 bg-gradient-to-tr from-green-400 to-emerald-600 rounded-full flex items-center justify-center mb-4 text-white shadow-lg shadow-green-500/30 animate-bounce-short">
-                        <i data-lucide="check" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-2xl font-black dark:text-white mb-1 tracking-tight">Akses Terbuka!</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Silakan simpan data berikut.</p>
-
-                    <!-- Session Timer (New) -->
-                    <div class="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-4 py-2 rounded-full border border-orange-100 dark:border-orange-900/50 mb-6">
-                        <i data-lucide="clock" class="w-3 h-3 text-orange-600 dark:text-orange-400"></i>
-                        <span class="text-[10px] font-bold text-orange-700 dark:text-orange-300">Sesi Berakhir: <span id="session-timer" class="font-mono text-xs">12:00:00</span></span>
-                    </div>
-                    
-                    <!-- Transaction Receipt (Styled) -->
-                    <div class="w-full bg-white dark:bg-gray-800 rounded-2xl p-5 mb-6 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
-                        <!-- Decoration Circles -->
-                        <div class="absolute -top-6 -right-6 w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full"></div>
-                        <div class="absolute -top-6 -left-6 w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full"></div>
-
-                        <div class="space-y-3 relative z-10">
-                            <div class="flex justify-between items-start border-b border-dashed border-gray-200 dark:border-gray-700 pb-3">
-                                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Item</span>
-                                <span id="success-product-name" class="text-xs font-bold dark:text-white text-right w-2/3">Loading...</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Tgl</span>
-                                <span id="success-date" class="text-xs font-mono dark:text-gray-300">--/--/--</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Ref ID</span>
-                                <span id="success-trx-id" class="text-xs font-mono dark:text-gray-300">#TRX-000</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Content Box (Improved) -->
-                    <div class="w-full relative group">
-                        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                        <div class="relative w-full bg-gray-900 text-gray-100 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl">
-                            <!-- Header Code Window -->
-                            <div class="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-                                <div class="flex gap-1.5">
-                                    <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                                    <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                                    <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                                </div>
-                                <span class="text-[10px] font-mono text-gray-400">content.txt</span>
-                            </div>
-                            
-                            <!-- Content Area -->
-                            <div class="p-5 text-left">
-                                <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">OUTPUT:</p>
-                                <div id="unlocked-content-display" class="font-mono text-sm text-indigo-300 break-all select-all leading-relaxed">Loading...</div>
-                            </div>
-
-                            <!-- Action Bar -->
-                            <div class="bg-gray-800/50 p-2 flex justify-end backdrop-blur border-t border-gray-700">
-                                <button onclick="copyContent()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all active:scale-95">
-                                    <i data-lucide="copy" class="w-3 h-3"></i> Salin Konten
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <p class="text-[10px] text-gray-400 mt-6 max-w-xs mx-auto">⚠️ Harap simpan data ini sekarang. Tautan akses akan kedaluwarsa setelah sesi berakhir.</p>
-                </div>
-
-            </div>
+            pcall(function() loadstring(game:HttpGet(MAIN_SCRIPT_URL))() end)
             
-            <!-- Footer Action Button -->
-            <div id="checkout-footer" class="p-6 border-t dark:border-gray-800 bg-white dark:bg-gray-900">
-                <button id="checkout-action-btn" onclick="processDirectCheckout()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20 flex items-center justify-center gap-2">
-                    <i data-lucide="message-circle" class="w-5 h-5"></i> Proses via WhatsApp
-                </button>
-            </div>
-        </div>
-    </div>
+            if ScreenGui then ScreenGui:Destroy() end
+            return
+        else
+            -- [INVALID/EXPIRED]
+            StarterGui:SetCore("SendNotification", {
+                Title = "PowerHUB",
+                Text = "Key Expired / Invalid.",
+                Duration = 3,
+            })
+        end
+    end
+    
+    -- Jika tidak ada key, munculkan UI
+    ScreenGui.Enabled = true
+end)
 
-    <!-- ADMIN LOGIN MODAL -->
-    <div id="password-modal" class="fixed inset-0 z-[130] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePasswordModal()"></div>
-        <div class="relative bg-white dark:bg-gray-900 p-8 rounded-3xl shadow-2xl w-full max-w-sm transform transition-all scale-100 border border-gray-200 dark:border-gray-700">
-            <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-600 dark:text-indigo-400">
-                    <i data-lucide="shield-alert" class="w-6 h-6"></i>
-                </div>
-                <h3 class="text-xl font-bold dark:text-white">Admin Access</h3>
-                <p class="text-xs text-gray-500 mt-1">Silakan masukkan kredensial administrator.</p>
-            </div>
+local function OpenLink(link)
+    local successCopy = false
+    pcall(function()
+        if setclipboard then setclipboard(link) successCopy = true
+        elseif toclipboard then toclipboard(link) successCopy = true end
+    end)
+
+    pcall(function() game:GetService("LinkingService"):OpenUrl(link) end)
+    
+    if string.find(link, "discord") and request then
+        pcall(function()
+            local code = string.gsub(link, "https://discord.gg/", "")
+            request({
+                Url = "http://127.0.0.1:6463/rpc?v=1",
+                Method = "POST",
+                Headers = {["Content-Type"]="application/json", ["Origin"]="https://discord.com"},
+                Body = HttpService:JSONEncode({cmd="INVITE_BROWSER", args={code=code}, nonce=HttpService:GenerateGUID(false)})
+            })
+        end)
+    end
+
+    if successCopy then
+        task.spawn(function() ShowNotification("Link Copied to Clipboard!", false) end)
+    else
+        task.spawn(function() ShowNotification("Opening Browser...", false) end)
+    end
+end
+
+GetKeyBtn.MouseButton1Click:Connect(function()
+    OpenLink(KEY_LINK)
+end)
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    OpenLink(DISCORD_LINK)
+end)
+
+ConfirmBtn.MouseButton1Click:Connect(function()
+    local userKey = InputBox.Text
+    userKey = string.gsub(userKey, "^%s*(.-)%s*$", "%1")
+    
+    if userKey == "" then 
+        task.spawn(function() ShowNotification("Please paste the key first!", true) end)
+        return 
+    end
+    
+    ConfirmBtn.Text = "CHECKING..."
+    InputBox.TextEditable = false
+    
+    -- Cek Database GitHub
+    local success, response = pcall(function() return game:HttpGet(KEY_DATABASE_URL) end)
+    
+    if success then
+        if string.find(response, userKey) then
+            -- KEY BENAR -> SIMPAN -> MASUK
+            SaveKey(userKey)
             
-            <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
-                <div>
-                    <input type="text" id="admin-id-input" placeholder="Admin ID" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-center font-bold tracking-widest text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono transition-all text-sm">
-                </div>
-                <div>
-                    <input type="password" id="admin-password-input" placeholder="Password" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-center font-bold tracking-widest text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono transition-all text-sm">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-95 flex justify-center items-center gap-2">
-                    <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Dashboard
-                </button>
-            </form>
-            <button onclick="closePasswordModal()" class="w-full text-gray-400 text-xs font-bold mt-4 hover:text-gray-900 dark:hover:text-white transition-colors">BATAL</button>
-        </div>
-    </div>
-
-    <!-- FLOATING ACTION BUTTONS -->
-    <button id="admin-popup-btn" onclick="openPopupManageModal()" class="fixed bottom-24 right-6 z-[90] w-12 h-12 bg-gray-700 text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform hidden animate-bounce-short border border-white/10" title="Kelola Pop-up">
-        <i data-lucide="layout" class="w-5 h-5"></i>
-    </button>
-
-    <button id="admin-add-btn" onclick="openAdminModal()" class="fixed bottom-6 right-6 z-[90] w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform hidden animate-bounce-short border-2 border-white dark:border-gray-900" title="Tambah Produk">
-        <i data-lucide="plus" class="w-8 h-8"></i>
-    </button>
-
-    <!-- ADMIN MODALS (ADD PRODUCT & POPUP) -->
-    <div id="popup-manage-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePopupManageModal()"></div>
-        <div id="popup-manage-content" class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
-            <div class="p-6 md:p-8 overflow-y-auto max-h-[85vh] custom-scroll">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold dark:text-white flex items-center gap-2"><i data-lucide="layout" class="w-5 h-5 text-indigo-500"></i> Kelola Pop-up</h2>
-                    <button onclick="closePopupManageModal()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
-                <form id="manage-popup-form" onsubmit="handlePopupSubmit(event)" class="space-y-4">
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Status</label><select id="popup-status" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white font-bold"><option value="active">AKTIF</option><option value="inactive">NON-AKTIF</option></select></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Judul</label><input type="text" id="popup-manage-title" placeholder="Cth: DISKON SERVER" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pesan</label><textarea id="popup-manage-msg" rows="2" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></textarea></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Link</label><input type="text" id="popup-manage-link" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Gambar</label><input id="popup-manage-image" type="file" accept="image/*" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-500" /></div>
-                    <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700">Simpan</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- FLASH SALE SETTINGS MODAL -->
-    <div id="flash-sale-settings-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeFlashSaleSettings()"></div>
-        <div id="flash-sale-settings-content" class="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-bold dark:text-white flex items-center gap-2"><i data-lucide="timer" class="w-5 h-5 text-indigo-500"></i> Set Flash Sale</h2>
-                    <button onclick="closeFlashSaleSettings()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Berakhir Pada</label>
-                        <input type="datetime-local" id="flash-sale-end-time" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white text-sm">
-                    </div>
-                    <button onclick="saveFlashSaleSettings()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700">Simpan Timer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAdminModal()"></div>
-        <div id="admin-modal-content" class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
-            <div class="p-6 md:p-8 overflow-y-auto max-h-[85vh] custom-scroll">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold dark:text-white">Tambah Script</h2>
-                    <button onclick="closeAdminModal()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
-                <form id="add-product-form" onsubmit="handleAdminSubmit(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kategori</label>
-                        <select id="input-category" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white">
-                            <option value="free">Free Script</option>
-                            <option value="vip">VIP Script</option>
-                        </select>
-                    </div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama Script</label><input type="text" id="input-name" required class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Harga (Rp)</label><input type="number" id="input-price" required class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Fitur / Deskripsi</label><textarea id="input-desc" rows="3" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></textarea></div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tanggal Rilis</label>
-                        <input type="date" id="input-date" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white text-sm" placeholder="Pilih Tanggal">
-                    </div>
-
-                    <!-- ACCESS KEY SETTINGS -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Password (Syarat Buka)</label>
-                            <input type="text" id="input-access-key" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white text-sm" placeholder="Contoh: 1234">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Link Get Password</label>
-                            <input type="text" id="input-key-link" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white text-sm" placeholder="https://...">
-                        </div>
-                    </div>
-                    
-                    <!-- NEW: CONTENT KEY (RESULT) -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Content/Script Key (Isi Produk)</label>
-                        <textarea id="input-content-key" rows="2" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white" placeholder="Link download atau kode script yang muncul setelah password benar"></textarea>
-                    </div>
-
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Cover Image</label><input id="input-image-file" type="file" accept="image/*" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-500" required /></div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Label</label>
-                        <div class="flex flex-wrap gap-2 mb-2">
-                            <label class="cursor-pointer"><input type="checkbox" name="product-tags" value="FLASH SALE" class="hidden tag-checkbox"><div class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">FLASH SALE</div></label>
-                            <label class="cursor-pointer"><input type="checkbox" name="product-tags" value="NEW" class="hidden tag-checkbox"><div class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">NEW</div></label>
-                            <label class="cursor-pointer"><input type="checkbox" name="product-tags" value="BEST SELLER" class="hidden tag-checkbox"><div class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">BEST SELLER</div></label>
-                        </div>
-                        <input type="text" id="input-custom-tag" placeholder="+ Label Custom (Opsional)" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-xs dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Diskon</label>
-                        <select id="input-discount" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white">
-                            <option value="0">Tidak Ada</option>
-                            <option value="20">20%</option>
-                            <option value="50">50%</option>
-                        </select>
-                    </div>
-                    
-                    <div class="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700">
-                        <input type="checkbox" id="input-active" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
-                        <label for="input-active" class="text-sm font-bold text-gray-700 dark:text-gray-300">Status Produk Aktif</label>
-                    </div>
-
-                    <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg">Simpan Produk</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div id="hero-manage-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeHeroManageModal()"></div>
-        <div id="hero-manage-content" class="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0 flex flex-col max-h-[85vh]">
-            <div class="p-6 border-b dark:border-gray-800 flex justify-between items-center">
-                <h2 class="text-xl font-bold dark:text-white">Kelola Slide</h2>
-                <button onclick="closeHeroManageModal()" class="p-2 bg-gray-100 dark:bg-gray-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
-                <div class="mb-6"><label class="block text-xs font-bold uppercase text-gray-500 mb-3">Slide Aktif</label><div id="active-slides-list" class="space-y-3"></div></div>
-                <hr class="border-gray-200 dark:border-gray-700 mb-6">
-                <h3 class="font-bold text-lg dark:text-white mb-4">Tambah Baru</h3>
-                <div class="flex gap-4 mb-4">
-                    <button onclick="toggleSlideType('product')" id="btn-type-product" class="flex-1 py-2 rounded-lg text-sm font-bold border border-indigo-500 bg-indigo-500 text-white transition-colors">Dari Produk</button>
-                    <button onclick="toggleSlideType('custom')" id="btn-type-custom" class="flex-1 py-2 rounded-lg text-sm font-bold border border-gray-300 text-gray-500 transition-colors">Manual</button>
-                </div>
-                <div id="form-slide-product" class="space-y-4">
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pilih Produk</label><select id="hero-product-select" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"><option value="">-- Pilih --</option></select></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tagline</label><input type="text" id="hero-prod-tagline" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                </div>
-                <div id="form-slide-custom" class="space-y-4 hidden">
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Judul</label><input type="text" id="hero-cust-title" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Deskripsi</label><input type="text" id="hero-cust-desc" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tagline</label><input type="text" id="hero-cust-tagline" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Link</label><input type="text" id="hero-cust-link" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Gambar</label><input id="hero-cust-image" type="file" accept="image/*" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-500" /></div>
-                </div>
-            </div>
-            <div class="p-6 border-t dark:border-gray-800"><button onclick="addHeroSlide()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg">Tambah ke Slide</button></div>
-        </div>
-    </div>
-
-    <!-- NAVBAR -->
-    <div class="sticky top-4 z-50 px-4">
-        <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-full px-6 py-4 shadow-xl border border-white/20 dark:border-white/5 transition-all duration-300 max-w-7xl mx-auto">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <!-- Added ondblclick for secret admin access -->
-                <a href="#" ondblclick="handleAdminClick()" class="font-bold text-2xl flex items-center gap-2 dark:text-white flex-shrink-0 tracking-tight cursor-pointer select-none" title="Double click for Admin">
-                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white"><i data-lucide="code-2" class="w-5 h-5"></i></div>
-                    PowerHUB.
-                </a>
-                <div class="hidden md:flex flex-1 max-w-lg mx-6 relative">
-                    <input type="text" onkeyup="searchProducts(this.value)" placeholder="Cari script, template, bot..." class="w-full bg-gray-100 dark:bg-slate-800 border-none rounded-full py-3 px-12 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white">
-                    <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                </div>
-                <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
-                    <button onclick="toggleCart()" class="relative p-2.5 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 text-gray-900 dark:text-white transition-colors group">
-                        <i data-lucide="shopping-cart" class="w-6 h-6 group-hover:text-indigo-600 transition-colors"></i>
-                        <span id="cart-count" class="absolute top-0 right-0 w-4 h-4 bg-indigo-600 rounded-full text-[10px] text-white flex items-center justify-center hidden ring-2 ring-white dark:ring-slate-900">0</span>
-                    </button>
-                    <button onclick="toggleMenu()" class="p-2.5 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:bg-indigo-600 dark:hover:bg-indigo-50 dark:hover:text-indigo-600 transition-all shadow-md">
-                        <i data-lucide="menu" class="w-6 h-6"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="md:hidden mt-4 relative w-full">
-                <input type="text" onkeyup="searchProducts(this.value)" placeholder="Cari script..." class="w-full bg-gray-100 dark:bg-slate-800 border-none rounded-full py-3 px-10 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white">
-                <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            </div>
-        </nav>
-    </div>
-
-    <!-- MARQUEE -->
-    <div class="bg-indigo-600 text-white py-3 marquee-container mt-6">
-        <div class="marquee-content text-xs font-bold tracking-widest flex items-center font-mono">
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="download" class="w-3 h-3"></i> INSTANT DOWNLOAD</span>
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="shield-check" class="w-3 h-3"></i> 100% VIRUS FREE</span>
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="code" class="w-3 h-3"></i> CLEAN CODE</span>
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="life-buoy" class="w-3 h-3"></i> 24/7 SUPPORT</span>
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="download" class="w-3 h-3"></i> INSTANT DOWNLOAD</span>
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="shield-check" class="w-3 h-3"></i> 100% VIRUS FREE</span>
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="code" class="w-3 h-3"></i> CLEAN CODE</span>
-            <span class="mx-8 flex items-center gap-2"><i data-lucide="life-buoy" class="w-3 h-3"></i> 24/7 SUPPORT</span>
-        </div>
-    </div>
-
-    <!-- HERO SECTION -->
-    <section class="px-4 py-8 relative group">
-        <button id="admin-hero-edit-btn" onclick="openHeroManageModal()" class="absolute top-12 right-12 z-50 bg-white/90 text-gray-900 px-4 py-2 rounded-full font-bold shadow-lg hidden hover:scale-105 transition-transform flex items-center gap-2 cursor-pointer">
-            <i data-lucide="edit-3" class="w-4 h-4"></i> Edit
-        </button>
-
-        <div class="max-w-7xl mx-auto bg-[#0f172a] rounded-[2.5rem] overflow-hidden relative shadow-2xl transition-colors duration-500 border border-gray-800">
-            <!-- Abstract Tech Background -->
-            <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-            <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-            <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-
-            <div id="hero-track" class="flex w-full carousel-track"></div>
-
-            <button onclick="prevSlide()" class="absolute left-6 top-1/2 -translate-y-1/2 bg-white/5 hover:bg-white/10 backdrop-blur-md p-3 rounded-full text-white transition-colors z-30 hidden md:block border border-white/10"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
-            <button onclick="nextSlide()" class="absolute right-6 top-1/2 -translate-y-1/2 bg-white/5 hover:bg-white/10 backdrop-blur-md p-3 rounded-full text-white transition-colors z-30 hidden md:block border border-white/10"><i data-lucide="chevron-right" class="w-6 h-6"></i></button>
-            <div id="hero-indicators" class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-30"></div>
-        </div>
-    </section>
-
-    <!-- FLASH SALE SECTION (COMPACT & DYNAMIC) -->
-    <section id="flash-sale" class="px-4 py-6 bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white mb-4 shadow-xl border-y border-white/10 hidden">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-white/10 rounded-xl backdrop-blur border border-white/20 shadow-lg animate-pulse"><i data-lucide="zap" class="w-5 h-5 text-yellow-300 fill-current"></i></div>
-                    <div class="flex items-center gap-2">
-                        <div>
-                            <h2 class="text-xl md:text-2xl font-black font-mono uppercase tracking-widest italic drop-shadow-md">Flash Sale</h2>
-                            <p class="text-indigo-200 text-[10px] font-bold tracking-wide">DISKON SPESIAL TERBATAS</p>
-                        </div>
-                        <button id="admin-flash-setting-btn" onclick="openFlashSaleSettings()" class="bg-white/20 hover:bg-white/30 p-1.5 rounded-full backdrop-blur-sm hidden text-white"><i data-lucide="settings" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-                <div class="flex gap-1.5 font-mono font-bold text-lg md:text-xl">
-                    <div class="bg-black/30 backdrop-blur rounded-lg p-2 min-w-[50px] text-center border border-white/10 shadow-inner"><span id="fs-h" class="text-yellow-400">00</span><div class="text-[8px] font-sans font-bold text-white/50 tracking-widest mt-0.5">JAM</div></div>
-                    <div class="self-center pb-3 text-white/50">:</div>
-                    <div class="bg-black/30 backdrop-blur rounded-lg p-2 min-w-[50px] text-center border border-white/10 shadow-inner"><span id="fs-m" class="text-yellow-400">00</span><div class="text-[8px] font-sans font-bold text-white/50 tracking-widest mt-0.5">MNT</div></div>
-                    <div class="self-center pb-3 text-white/50">:</div>
-                    <div class="bg-black/30 backdrop-blur rounded-lg p-2 min-w-[50px] text-center border border-white/10 shadow-inner"><span id="fs-s" class="text-yellow-400">00</span><div class="text-[8px] font-sans font-bold text-white/50 tracking-widest mt-0.5">DTK</div></div>
-                </div>
-            </div>
+            task.spawn(function() ShowNotification("Access Granted! Welcome.", false) end)
+            InputBox.TextColor3 = Color3.fromRGB(80, 255, 100)
             
-            <div id="flash-sale-grid" class="flex overflow-x-auto gap-4 pb-4 no-scrollbar snap-x">
-                <!-- Items populated by JS -->
-            </div>
-        </div>
-    </section>
-
-    <!-- MAIN SHOP SECTION -->
-    <section id="koleksi" class="px-4 pb-20 scroll-mt-28 mt-4">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-                <div>
-                    <h2 class="text-3xl font-bold dark:text-white flex items-center gap-2">Explore Scripts <span class="text-indigo-500">🚀</span></h2>
-                    <p class="text-gray-500 mt-1">Tools terbaik untuk upgrade project Anda.</p>
-                </div>
-                
-                <div class="flex overflow-x-auto gap-2 w-full md:w-auto no-scrollbar pb-2">
-                    <button onclick="switchTab('semua')" id="btn-semua" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap bg-indigo-600 text-white shadow-lg shadow-indigo-500/30">All</button>
-                    <button onclick="switchTab('free')" id="btn-free" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap bg-white dark:bg-slate-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-700">Free Script</button>
-                    <button onclick="switchTab('vip')" id="btn-vip" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap bg-white dark:bg-slate-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-700">VIP Script</button>
-                </div>
-            </div>
+            task.wait(1.5)
+            ScreenGui:Destroy()
             
-            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-            
-            <div id="empty-category-msg" class="hidden text-center py-20 text-gray-400">
-                <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="package-open" class="w-8 h-8 opacity-50"></i>
-                </div>
-                <p>Belum ada produk di kategori ini.</p>
-            </div>
-            <div id="search-not-found" class="hidden text-center py-20 text-gray-400">
-                <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="search-x" class="w-8 h-8 opacity-50"></i>
-                </div>
-                <p>Script tidak ditemukan.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- PRODUCT DETAIL MODAL -->
-    <div id="product-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div id="modal-content" class="relative w-full max-w-4xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden transform transition-all duration-300 scale-95 opacity-0 max-h-[85vh] md:max-h-[600px] border border-gray-200 dark:border-gray-700">
-            <button onclick="closeModal()" class="absolute top-3 right-3 z-50 bg-black/30 p-2 rounded-full md:hidden text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            <div class="w-full md:w-1/2 h-64 md:h-auto flex-none bg-gray-100 dark:bg-gray-800 relative group overflow-hidden">
-                <img id="modal-img" src="" class="w-full h-full object-cover">
-                <div id="modal-tags-container" class="absolute top-4 left-4 z-20 flex flex-col items-start gap-2"></div>
-            </div>
-            <div class="flex-1 flex flex-col min-h-0">
-                <div class="px-6 pt-6 flex justify-between items-start flex-none">
-                    <div>
-                        <p class="text-xs font-bold text-indigo-500 uppercase mb-1 tracking-wider">Premium Script</p>
-                        <h2 id="modal-title" class="text-2xl md:text-3xl font-bold dark:text-white leading-tight">Nama Produk</h2>
-                    </div>
-                    <button onclick="closeModal()" class="hidden md:flex p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
-                </div>
-                <div class="flex-1 overflow-y-auto px-6 py-4 custom-scroll">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-1 text-yellow-400 text-sm font-bold"><i data-lucide="star" class="w-4 h-4 fill-current"></i> 5.0</div>
-                        <div class="text-right" id="modal-price-container"></div>
-                    </div>
-                    <div class="prose prose-sm dark:prose-invert text-gray-600 dark:text-gray-300">
-                        <p id="modal-desc" class="leading-relaxed whitespace-pre-line font-mono text-xs md:text-sm bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">Deskripsi...</p>
-                        <div class="mt-4 grid grid-cols-2 gap-3">
-                            <div class="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900/30">
-                                <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i> <span class="text-xs font-bold text-green-700 dark:text-green-400">Tested</span>
-                            </div>
-                            <div class="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                                <i data-lucide="file-json" class="w-4 h-4 text-blue-600"></i> <span class="text-xs font-bold text-blue-700 dark:text-blue-400">Documentation</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex-none p-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-                    <div class="flex items-center gap-4">
-                        <button onclick="openDirectCheckout()" class="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20">
-                            <i data-lucide="shopping-cart" class="w-5 h-5"></i> Beli Sekarang
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MOBILE SIDEBAR -->
-    <div id="sidebar-overlay" onclick="closeAllSidebars()" class="fixed inset-0 bg-black/40 hidden z-[60] backdrop-blur-sm transition-opacity"></div>
-    <div id="mobile-sidebar" class="fixed top-0 left-0 h-full w-[85%] max-w-sm bg-white dark:bg-gray-900 z-[70] transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
-        <div class="p-6 flex justify-between items-center border-b dark:border-gray-800">
-            <span class="font-bold text-xl dark:text-white flex items-center gap-2"><i data-lucide="code-2" class="w-6 h-6 text-indigo-600"></i> PowerHUB.</span>
-            <button onclick="toggleMenu()" class="text-gray-900 dark:text-white p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
-        </div>
-        <div class="flex-1 p-6 space-y-4 overflow-y-auto">
-            <a href="#" class="block text-lg font-bold dark:text-white hover:text-indigo-600 transition-colors">Home</a>
-            <a href="#flash-sale" onclick="toggleMenu()" class="block text-lg font-bold text-red-500 hover:text-red-600 transition-colors flex items-center gap-2"><i data-lucide="zap" class="w-5 h-5 fill-current"></i> Flash Sale</a>
-            <!-- CART BUTTON REMOVED -->
-            <div class="pt-6 border-t border-gray-100 dark:border-gray-800 mt-4">
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Categories</p>
-                <button onclick="switchTab('semua');toggleMenu()" class="flex items-center gap-3 text-base font-medium text-gray-600 dark:text-gray-300 mb-3"><i data-lucide="grid" class="w-4 h-4"></i> All Scripts</button>
-                <button onclick="switchTab('free');toggleMenu()" class="flex items-center gap-3 text-base font-medium text-gray-600 dark:text-gray-300 mb-3"><i data-lucide="gift" class="w-4 h-4"></i> Free Scripts</button>
-                <button onclick="switchTab('vip');toggleMenu()" class="flex items-center gap-3 text-base font-medium text-gray-600 dark:text-gray-300 mb-3"><i data-lucide="crown" class="w-4 h-4"></i> VIP Scripts</button>
-            </div>
-            
-            <!-- ADMIN BUTTON RESTORED -->
-            <button onclick="handleAdminClick()" class="flex items-center gap-2 text-sm font-bold w-full dark:text-white mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 hover:text-indigo-600">
-                <span id="admin-menu-text">Admin Login</span> <i id="admin-icon" data-lucide="lock" class="w-4 h-4"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- CART SIDEBAR -->
-    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-[100%] md:w-[480px] bg-white dark:bg-gray-900 z-[80] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
-        <div class="p-6 border-b dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-black/20">
-            <h2 class="font-bold text-xl dark:text-white">Your Cart (<span id="cart-total-items">0</span>)</h2>
-            <button onclick="toggleCart()" class="text-gray-900 dark:text-white p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto custom-scroll">
-            <div id="cart-items-container" class="p-6 space-y-4"></div>
-            <div id="cart-form-container" class="px-6 pb-6 pt-2 border-t border-gray-100 dark:border-gray-800 hidden">
-                <div class="mb-4">
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Promo Code</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="voucher-input" placeholder="CODE" class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm dark:text-white uppercase font-mono">
-                        <button onclick="applyVoucher()" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm">Apply</button>
-                    </div>
-                    <p id="voucher-message" class="text-xs mt-1 hidden"></p>
-                </div>
-                <div class="space-y-3">
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Your Name</label><input type="text" id="cust-name" placeholder="John Doe" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm dark:text-white"></div>
-                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Email (for files)</label><input type="email" id="cust-address" placeholder="john@example.com" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm dark:text-white"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-6 border-t dark:border-gray-800 bg-white dark:bg-gray-900 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-            <div class="space-y-2 mb-4">
-                <div class="flex justify-between text-gray-500 text-sm"><span>Subtotal</span><span id="cart-subtotal-display">Rp 0</span></div>
-                <div id="discount-row" class="flex justify-between text-green-600 text-sm font-bold hidden"><span id="discount-label">Discount</span><span id="discount-amount">-Rp 0</span></div>
-                <div class="flex justify-between text-lg font-bold dark:text-white pt-2 border-t border-dashed border-gray-200 dark:border-gray-700"><span>Total</span><span id="cart-final-total" class="text-indigo-600">Rp 0</span></div>
-            </div>
-            <button onclick="checkoutWA()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20">Checkout WhatsApp</button>
-        </div>
-    </div>
-
-    <footer id="footer" class="bg-gray-900 dark:bg-black text-white pt-20 pb-10 px-4 rounded-t-[3rem] mt-20">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="flex justify-center items-center gap-2 mb-4">
-                <i data-lucide="code-2" class="w-8 h-8 text-indigo-500"></i>
-                <h3 class="text-3xl font-bold">PowerHUB.</h3>
-            </div>
-            <p class="text-gray-400 mb-8 max-w-md mx-auto">High Quality Scripts & Source Codes for your next big project.</p>
-            <p class="text-gray-600 text-sm mt-4">© 2024 PowerHUB Store. All rights reserved.</p>
-            
-            <!-- ADMIN LINK IN FOOTER -->
-            <div class="mt-4">
-                <button onclick="handleAdminClick()" class="text-xs text-gray-700 hover:text-gray-500 transition-colors flex items-center gap-1 mx-auto">
-                    <i data-lucide="shield" class="w-3 h-3"></i> Admin Panel
-                </button>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // --- CONFIG ---
-        const ADMIN_ID = "ADMxPowerhubbase";
-        const ADMIN_PASSWORD = "adminlogin402540";
-        const WA_NUMBER = "6285814104500"; 
-        const FREE_ACCESS_KEY = "POWERHUB"; // Key default
-        const GET_KEY_LINK = "https://google.com"; // Ganti dengan link iklan/generator
-        
-        // --- SECURITY: ANTI CTRL+U & RIGHT CLICK ---
-        document.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            // showToast("Klik Kanan Dinonaktifkan 🔒"); // Uncomment jika ingin notifikasi
-        });
-
-        document.addEventListener('keydown', (e) => {
-            // Prevent Ctrl+U (Source), Ctrl+S (Save), Ctrl+P (Print)
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) {
-                e.preventDefault();
-                showToast("Akses Terbatas! 🔒");
-                return false;
-            }
-            // Prevent Ctrl+Shift+I (DevTools), Ctrl+Shift+J (Console), Ctrl+Shift+C (Inspect)
-            if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J' || e.key === 'c' || e.key === 'C')) {
-                e.preventDefault();
-                return false;
-            }
-            // Prevent F12 (DevTools)
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // --- DATA ---
-        const ACTIVE_VOUCHERS = { 'DEV10': { type: 'percent', value: 10 }, 'NEWYEAR': { type: 'percent', value: 25 } };
-        let cart = []; 
-        let currentModalProduct = null; 
-        let currentCategory = 'semua'; 
-        let isAdminMode = false; 
-        let currentSlideIndex = 0; 
-        let slideInterval; 
-        let appliedVoucherCode = null;
-        let activePopupData = null;
-        let sessionTimerInterval; // Variable for session timer
-
-        // --- NEW PRODUCT CATEGORIES (FILLED TO SHOW FLASH SALE) ---
-        let products = {
-            'free': [
-                { 
-                    id: 'f1', 
-                    name: 'Simple Landing Page', 
-                    price: 0, 
-                    originalPrice: 0, 
-                    discount: 0, 
-                    tags: ['FREE', 'HTML'], 
-                    active: true, 
-                    image: 'https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=800&q=80', 
-                    desc: "Template landing page sederhana, responsif, dan ringan.",
-                    accessKey: "LANDING123",
-                    keyLink: "https://example.com/getkey",
-                    contentKey: "https://drive.google.com/u/0/uc?id=view&export=download"
-                }
-            ],
-            'vip': [
-                { id: 'v1', name: 'E-Commerce Pro Laravel', price: 250000, originalPrice: 500000, discount: 50, tags: ['VIP', 'BEST SELLER', 'FLASH SALE'], active: true, image: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80', desc: "Source Code Toko Online Full Fitur dengan Payment Gateway." }
-            ]
-        };
-
-        // --- SLIDES ---
-        let heroSlides = [
-            { type: 'custom', title: "Build Faster.", desc: "Ribuan source code premium siap pakai.", tagline: "CODE MARKETPLACE", image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80", link: "#koleksi" }
-        ];
-
-        // --- STORAGE SYSTEM ---
-        function saveProductsToStorage() { try { localStorage.setItem('powerhub_scripts_db', JSON.stringify(products)); } catch (e) {} }
-        function loadProductsFromStorage() {
-            const savedData = localStorage.getItem('powerhub_scripts_db');
-            if (savedData) { try { products = JSON.parse(savedData); } catch (e) {} }
-            const popupData = localStorage.getItem('powerhub_active_popup_v3');
-            if (popupData) { try { activePopupData = JSON.parse(popupData); } catch(e){} }
-        }
-
-        // --- CORE FUNCTIONS ---
-        function toggleAboutSlide() { const s=document.getElementById('about-us-slide'); s.classList.toggle('translate-x-full'); if(!s.classList.contains('translate-x-full')) document.body.style.overflow='hidden'; else document.body.style.overflow=''; }
-        
-        function searchProducts(q) {
-            const term = q.toLowerCase();
-            const container = document.getElementById('product-grid');
-            if(term.trim()===''){ renderGrid(currentCategory); document.getElementById('search-not-found').classList.add('hidden'); return; }
-            container.innerHTML=''; let found=0;
-            Object.keys(products).forEach(cat=>{
-                products[cat].forEach(item=>{
-                    if(item.name.toLowerCase().includes(term)) { renderCard(item, cat, container); found++; }
-                });
-            });
-            const nf = document.getElementById('search-not-found'); const em = document.getElementById('empty-category-msg');
-            if(found===0) { nf.classList.remove('hidden'); em.classList.add('hidden'); } else { nf.classList.add('hidden'); em.classList.add('hidden'); }
-            lucide.createIcons();
-        }
-
-        // DIRECT CHECKOUT LOGIC
-        let currentCheckoutProduct = null;
-
-        function openDirectCheckout(product = null) {
-            const item = product || currentModalProduct;
-            if (!item) return;
-
-            currentCheckoutProduct = item;
-            appliedVoucherCode = null;
-
-            // Reset UI State
-            document.getElementById('checkout-main-view').classList.remove('hidden');
-            document.getElementById('unlock-success-view').classList.add('hidden');
-            document.getElementById('checkout-footer').classList.remove('hidden'); // Show footer by default
-            document.getElementById('checkout-action-btn').onclick = processDirectCheckout; // Reset click handler
-
-            // Populate Modal
-            document.getElementById('checkout-img').src = item.image;
-            document.getElementById('checkout-title').innerText = item.name;
-            document.getElementById('checkout-price').innerText = `Rp ${item.price.toLocaleString('id-ID')}`;
-            
-            if (item.originalPrice > item.price) {
-                document.getElementById('checkout-original-price').innerText = `Rp ${item.originalPrice.toLocaleString('id-ID')}`;
-                document.getElementById('checkout-original-price').classList.remove('hidden');
-            } else {
-                document.getElementById('checkout-original-price').classList.add('hidden');
-            }
-
-            // --- LOGIC PERBEDAAN FREE vs PAID ---
-            const keyInputContainer = document.getElementById('key-input-container');
-            const customerInfoSection = document.getElementById('customer-info-section');
-            const getKeyBtn = document.getElementById('get-key-btn');
-            const actionBtn = document.getElementById('checkout-action-btn');
-
-            if (item.price === 0) {
-                // FREE PRODUCT
-                keyInputContainer.classList.remove('hidden');
-                customerInfoSection.classList.add('hidden'); // Hide name/email/voucher
-                
-                const targetLink = item.keyLink || GET_KEY_LINK;
-                getKeyBtn.href = targetLink;
-
-                // Update Action Button
-                actionBtn.className = "w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2";
-                actionBtn.innerHTML = `<i data-lucide="unlock" class="w-5 h-5"></i> Buka Akses`;
-
-            } else {
-                // PAID PRODUCT
-                keyInputContainer.classList.add('hidden');
-                customerInfoSection.classList.remove('hidden'); // Show name/email/voucher
-                
-                // Update Action Button
-                actionBtn.className = "w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-600/20 flex items-center justify-center gap-2";
-                actionBtn.innerHTML = `<i data-lucide="message-circle" class="w-5 h-5"></i> Proses via WhatsApp`;
-            }
-
-            // Reset inputs
-            document.getElementById('cust-name').value = '';
-            document.getElementById('cust-email').value = '';
-            document.getElementById('voucher-input').value = '';
-            document.getElementById('access-key-input').value = ''; // Reset key input
-            document.getElementById('voucher-message').classList.add('hidden');
-            
-            closeModal();
-            updateCheckoutSummary();
-            document.getElementById('checkout-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function closeCheckoutModal() {
-            document.getElementById('checkout-modal').classList.add('hidden');
-            currentCheckoutProduct = null;
-        }
-
-        function updateCheckoutSummary() {
-            if (!currentCheckoutProduct) return;
-            let subtotal = currentCheckoutProduct.price;
-            let discountAmount = 0;
-
-            if (appliedVoucherCode && ACTIVE_VOUCHERS[appliedVoucherCode]) {
-                const voucher = ACTIVE_VOUCHERS[appliedVoucherCode];
-                if (voucher.type === 'percent') {
-                    discountAmount = subtotal * (voucher.value / 100);
-                } else {
-                    discountAmount = voucher.value;
-                }
-            }
-            if (discountAmount > subtotal) discountAmount = subtotal;
-            const total = subtotal - discountAmount;
-
-            document.getElementById('summary-subtotal').innerText = `Rp ${subtotal.toLocaleString('id-ID')}`;
-            document.getElementById('summary-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
-
-            if (discountAmount > 0) {
-                document.getElementById('summary-discount-row').classList.remove('hidden');
-                document.getElementById('summary-voucher-code').innerText = `(${appliedVoucherCode})`;
-                document.getElementById('summary-discount').innerText = `-Rp ${discountAmount.toLocaleString('id-ID')}`;
-            } else {
-                document.getElementById('summary-discount-row').classList.add('hidden');
-            }
-        }
-
-        function applyVoucher() {
-            const codeInput = document.getElementById('voucher-input');
-            const code = codeInput.value.toUpperCase().trim();
-            const msgEl = document.getElementById('voucher-message');
-
-            if (!code) return;
-
-            if (ACTIVE_VOUCHERS[code]) {
-                appliedVoucherCode = code;
-                msgEl.innerText = "Kode berhasil digunakan!";
-                msgEl.className = "text-xs mt-1 text-green-600 font-bold block";
-            } else {
-                appliedVoucherCode = null;
-                msgEl.innerText = "Kode tidak valid.";
-                msgEl.className = "text-xs mt-1 text-red-500 font-bold block";
-            }
-            updateCheckoutSummary();
-        }
-
-        // --- NEW: SESSION TIMER ---
-        function startSessionTimer() {
-            let timeLeft = 12 * 60 * 60; // 12 hours in seconds
-            const timerDisplay = document.getElementById('session-timer');
-            
-            clearInterval(sessionTimerInterval);
-            sessionTimerInterval = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(sessionTimerInterval);
-                    timerDisplay.innerText = "EXPIRED";
-                    return;
-                }
-                timeLeft--;
-                const h = Math.floor(timeLeft / 3600);
-                const m = Math.floor((timeLeft % 3600) / 60);
-                const s = timeLeft % 60;
-                timerDisplay.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        // --- NEW: COPY CONTENT ---
-        function copyContent() {
-            const text = document.getElementById('unlocked-content-display').innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast("Konten disalin!");
-            }).catch(() => {
-                // Fallback for older browsers
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand("copy");
-                document.body.removeChild(textArea);
-                showToast("Konten disalin!");
-            });
-        }
-
-        function processDirectCheckout() {
-            if (!currentCheckoutProduct) return;
-
-            // --- LOGIC FOR FREE PRODUCT (UNLOCK CONTENT) ---
-            if (currentCheckoutProduct.price === 0) {
-                const keyInput = document.getElementById('access-key-input').value.trim();
-                const requiredKey = currentCheckoutProduct.accessKey || FREE_ACCESS_KEY;
-                
-                if (keyInput !== requiredKey) {
-                    alert("Password Salah! Silakan dapatkan password yang benar.");
-                    return;
-                }
-
-                // SUCCESS: Show Content Key & TRANSACTION DETAILS
-                document.getElementById('checkout-main-view').classList.add('hidden'); // Hide form
-                document.getElementById('checkout-footer').classList.add('hidden'); // Hide button footer
-                document.getElementById('unlock-success-view').classList.remove('hidden'); // Show success
-                document.getElementById('unlock-success-view').classList.add('flex'); // Enable flex layout
-                
-                // --- INJECT DATA TRANSAKSI ---
-                const now = new Date();
-                const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                const trxId = 'TRX-FREE-' + Math.floor(100000 + Math.random() * 900000); // Random ID
-
-                document.getElementById('success-product-name').innerText = currentCheckoutProduct.name;
-                document.getElementById('success-date').innerText = formattedDate;
-                document.getElementById('success-trx-id').innerText = trxId;
-
-                // Display content
-                document.getElementById('unlocked-content-display').innerText = currentCheckoutProduct.contentKey || "Tidak ada konten yang diset. Hubungi Admin.";
-                
-                // START TIMER
-                startSessionTimer();
-
-                return; // Stop here, no WA redirect
-            }
-
-            // --- LOGIC FOR PAID PRODUCT (WHATSAPP) ---
-            const name = document.getElementById('cust-name').value.trim();
-            const email = document.getElementById('cust-email').value.trim();
-
-            if (!name || !email) {
-                alert("Mohon lengkapi Nama dan Email.");
-                return;
-            }
-
-            let subtotal = currentCheckoutProduct.price;
-            let discountAmount = 0;
-            if (appliedVoucherCode && ACTIVE_VOUCHERS[appliedVoucherCode]) {
-                const v = ACTIVE_VOUCHERS[appliedVoucherCode];
-                discountAmount = v.type === 'percent' ? subtotal * (v.value / 100) : v.value;
-            }
-            if (discountAmount > subtotal) discountAmount = subtotal;
-            const total = subtotal - discountAmount;
-
-            // Create Message
-            let msg = `*ORDER BARU - POWERHUB*\n`;
-            msg += `--------------------------------\n`;
-            msg += `👤 Nama: ${name}\n`;
-            msg += `📧 Email: ${email}\n`;
-            msg += `📦 Produk: ${currentCheckoutProduct.name}\n`;
-            msg += `💰 Harga: Rp ${subtotal.toLocaleString('id-ID')}\n`;
-            
-            if (discountAmount > 0) {
-                msg += `🏷 Diskon (${appliedVoucherCode}): -Rp ${discountAmount.toLocaleString('id-ID')}\n`;
-            }
-            
-            msg += `--------------------------------\n`;
-            msg += `*TOTAL BAYAR: Rp ${total.toLocaleString('id-ID')}*\n`;
-            msg += `\nMohon info pembayaran. Terima kasih!`;
-
-            const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-            window.open(waUrl, '_blank');
-            closeCheckoutModal();
-        }
-
-        // --- FLASH SALE LOGIC ---
-        function renderFlashSale() {
-            const container = document.getElementById('flash-sale-grid');
-            const section = document.getElementById('flash-sale');
-            container.innerHTML = '';
-            let flashItems = [];
-            
-            Object.keys(products).forEach(cat => {
-                products[cat].forEach(item => {
-                    const isActive = item.hasOwnProperty('active') ? item.active : true;
-                    if (isActive && item.tags && item.tags.includes('FLASH SALE')) {
-                        flashItems.push({ ...item, oCat: cat });
-                    }
-                });
-            });
-
-            if (flashItems.length === 0) {
-                section.classList.add('hidden');
-                return;
-            }
-
-            section.classList.remove('hidden');
-            flashItems.forEach(item => {
-                container.insertAdjacentHTML('beforeend', `
-                    <div onclick="openModal('${item.oCat}','${item.id}')" class="min-w-[180px] md:min-w-[220px] bg-white/90 dark:bg-gray-900/90 backdrop-blur rounded-2xl p-3 snap-center cursor-pointer hover:scale-[1.02] transition-transform border border-white/10 shadow-lg flex flex-col">
-                        <div class="relative aspect-video rounded-lg overflow-hidden mb-2 group">
-                            <div class="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow animate-pulse z-10">-${item.discount}%</div>
-                            <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        </div>
-                        <h4 class="font-bold text-gray-900 dark:text-white truncate text-xs mb-1">${item.name}</h4>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-[10px] text-gray-400 line-through">Rp ${item.originalPrice.toLocaleString('id-ID')}</span>
-                            <span class="text-sm font-bold text-indigo-500">Rp ${item.price.toLocaleString('id-ID')}</span>
-                        </div>
-                        <div class="mt-auto">
-                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 mb-1">
-                                <div class="bg-gradient-to-r from-red-500 to-orange-500 h-1 rounded-full" style="width: ${Math.floor(Math.random() * 40) + 60}%"></div>
-                            </div>
-                            <div class="flex justify-between text-[9px] text-gray-500 dark:text-gray-400">
-                                <span>Segera Habis!</span>
-                            </div>
-                        </div>
-                    </div>
-                `);
-            });
-        }
-
-        function initCountdown() {
-            let endTime = localStorage.getItem('fs_end_time');
-            if (!endTime) {
-                const d = new Date();
-                d.setHours(d.getHours() + 24);
-                endTime = d.toISOString();
-                localStorage.setItem('fs_end_time', endTime);
-            }
-
-            const update = () => {
-                const now = new Date();
-                const end = new Date(endTime);
-                const diff = end - now;
-
-                if (diff <= 0) { return; }
-
-                const h = Math.floor(diff / (1000 * 60 * 60));
-                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-                document.getElementById('fs-h').innerText = h < 10 ? '0'+h : h;
-                document.getElementById('fs-m').innerText = m < 10 ? '0'+m : m;
-                document.getElementById('fs-s').innerText = s < 10 ? '0'+s : s;
-            };
-            
-            setInterval(update, 1000);
-            update();
-        }
-
-        function openFlashSaleSettings() {
-            document.getElementById('flash-sale-settings-modal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('flash-sale-settings-content').classList.remove('scale-95', 'opacity-0'), 10);
-            const savedTime = localStorage.getItem('fs_end_time');
-            if (savedTime) {
-                const date = new Date(savedTime);
-                const localIso = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                document.getElementById('flash-sale-end-time').value = localIso;
-            }
-        }
-
-        function closeFlashSaleSettings() {
-            document.getElementById('flash-sale-settings-content').classList.add('scale-95', 'opacity-0');
-            setTimeout(() => document.getElementById('flash-sale-settings-modal').classList.add('hidden'), 300);
-        }
-
-        function saveFlashSaleSettings() {
-            const input = document.getElementById('flash-sale-end-time').value;
-            if (input) {
-                localStorage.setItem('fs_end_time', new Date(input).toISOString());
-                showToast("Timer Disimpan!");
-                closeFlashSaleSettings();
-                initCountdown();
-            }
-        }
-
-        // --- RENDERERS ---
-        function renderCard(item, cat, container) {
-            const isActive = item.hasOwnProperty('active') ? item.active : true;
-            const opacityClass = isActive ? '' : 'opacity-75 grayscale-[0.5]'; 
-            const cursorClass = 'cursor-pointer'; 
-            const clickEvent = `onclick="openModal('${cat}','${item.id}')"`; 
-            
-            const stockBadge = isActive ? '' : `<div class="absolute inset-0 z-[15] flex items-center justify-center pointer-events-none"><span class="bg-black/80 backdrop-blur text-white font-bold text-xs px-4 py-2 rounded-full uppercase tracking-widest shadow-lg transform rotate-[-10deg] border border-white/20">Stok Habis</span></div>`;
-
-            let tags = ''; 
-            if(item.tags) item.tags.forEach(t => {
-                let c = 'bg-gray-800 text-white';
-                if(t==='NEW') c='bg-indigo-500 text-white';
-                if(t==='BEST SELLER') c='bg-amber-500 text-white';
-                if(t==='VIP') c='bg-purple-600 text-white';
-                if(t==='FREE') c='bg-green-600 text-white';
-                if(t==='FLASH SALE') c='bg-red-600 text-white animate-pulse'; 
-                tags += `<span class="${c} text-[10px] font-bold px-2 py-1 rounded shadow uppercase">${t}</span> `;
-            });
-
-            let adminControls = '';
-            if (isAdminMode) {
-                const eyeIcon = isActive ? 'eye' : 'eye-off';
-                const eyeColor = isActive ? 'text-green-600' : 'text-gray-400';
-                adminControls = `
-                    <div class="absolute top-2 right-2 z-20 flex gap-2">
-                        <button onclick="event.stopPropagation(); toggleProductStatus('${cat}','${item.id}')" class="bg-white p-1.5 rounded-full shadow-sm hover:scale-110 transition-transform ${eyeColor}">
-                            <i data-lucide="${eyeIcon}" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="deleteProduct('${cat}','${item.id}',event)" class="bg-red-600 text-white p-1.5 rounded-full shadow-sm hover:scale-110 transition-transform">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                `;
-            }
-
-            // Format Date (Optional: Make it look nicer)
-            let dateHtml = '';
-            if(item.date) {
-                const d = new Date(item.date);
-                const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: '2-digit' });
-                dateHtml = `<span class="text-[10px] text-gray-400 font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded ml-2 whitespace-nowrap">${dateStr}</span>`;
-            }
-
-            container.insertAdjacentHTML('beforeend', `
-            <div ${clickEvent} class="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 relative ${opacityClass} ${cursorClass}">
-                ${adminControls}
-                ${stockBadge}
-                <div class="relative aspect-video overflow-hidden bg-gray-100">
-                    <div class="absolute top-2 left-2 z-10 flex gap-1 flex-wrap">${tags}</div>
-                    <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span class="bg-white/20 backdrop-blur text-white px-4 py-2 rounded-full font-bold text-sm">View Details</span>
-                    </div>
-                </div>
-                <div class="p-4">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-base dark:text-white line-clamp-1 group-hover:text-indigo-500 transition-colors flex-1">${item.name}</h3>
-                        ${dateHtml}
-                    </div>
-                    <div class="flex items-center justify-between">
-                        ${item.discount > 0 ? 
-                            `<div><span class="text-xs text-gray-400 line-through">Rp ${item.originalPrice.toLocaleString('id-ID')}</span><div class="font-bold text-indigo-600">Rp ${item.price.toLocaleString('id-ID')}</div></div>` : 
-                            `<div class="font-bold text-gray-900 dark:text-white">Rp ${item.price.toLocaleString('id-ID')}</div>`
-                        }
-                    </div>
-                </div>
-            </div>`);
-        }
-
-        function toggleProductStatus(cat, id) {
-            const product = products[cat].find(p => String(p.id) === String(id));
-            if (product) {
-                product.active = !product.active; 
-                saveProductsToStorage();
-                renderGrid(currentCategory);
-                renderFlashSale(); 
-                showToast(`Produk ${product.active ? 'Aktif' : 'Non-Aktif'}`);
-            }
-        }
-
-        function renderGrid(cat) {
-            currentCategory = cat;
-            const c = document.getElementById('product-grid'); c.innerHTML='';
-            let list = [];
-            if(cat==='semua') Object.keys(products).forEach(k=>products[k].forEach(i=>list.push({...i, oCat:k})));
-            else if(products[cat]) list = products[cat].map(i=>({...i, oCat:cat}));
-            
-            ['semua','free','vip'].forEach(k=>{
-                const b = document.getElementById(`btn-${k}`);
-                if(k===cat) b.className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap bg-indigo-600 text-white shadow-lg shadow-indigo-500/30";
-                else b.className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap bg-white dark:bg-slate-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-700";
-            });
-
-            document.getElementById('empty-category-msg').className = list.length?'hidden':'block text-center py-20 text-gray-400';
-            list.forEach(i=>renderCard(i, i.oCat, c));
-            lucide.createIcons();
-        }
-
-        function openModal(cat, id){
-            const i = products[cat].find(x=>String(x.id)===String(id));
-            if(!i) return;
-            
-            const isActive = i.hasOwnProperty('active') ? i.active : true;
-            
-            currentModalProduct=i;
-            document.getElementById('modal-title').innerText=i.name;
-            document.getElementById('modal-desc').innerText=i.desc;
-            document.getElementById('modal-img').src=i.image;
-            document.getElementById('modal-price-container').innerHTML = i.discount > 0 ? `<span class="text-sm line-through text-gray-400 mr-2">Rp ${i.originalPrice.toLocaleString('id-ID')}</span><span class="text-2xl font-bold text-indigo-600">Rp ${i.price.toLocaleString('id-ID')}</span>` : `<span class="text-2xl font-bold dark:text-white">Rp ${i.price.toLocaleString('id-ID')}</span>`;
-            
-            const tags = document.getElementById('modal-tags-container'); tags.innerHTML='';
-            if(i.tags) i.tags.forEach(t=> tags.insertAdjacentHTML('beforeend', `<span class="bg-black/70 backdrop-blur text-white text-[10px] font-bold px-3 py-1 rounded uppercase">${t}</span>`));
-            
-            const cartBtn = document.querySelector('#modal-content button[onclick="openDirectCheckout()"]');
-            if (isActive) {
-                cartBtn.disabled = false;
-                cartBtn.className = "flex-1 bg-indigo-600 text-white py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20";
-                cartBtn.innerHTML = `<i data-lucide="shopping-cart" class="w-5 h-5"></i> Beli Sekarang`;
-                cartBtn.onclick = function() { openDirectCheckout(); };
-            } else {
-                cartBtn.disabled = true;
-                cartBtn.className = "flex-1 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 cursor-not-allowed";
-                cartBtn.innerHTML = `<i data-lucide="lock" class="w-5 h-5"></i> Stok Habis`;
-                cartBtn.onclick = null;
-            }
-
-            document.getElementById('product-modal').classList.remove('hidden');
-            setTimeout(()=>document.getElementById('modal-content').classList.remove('scale-95','opacity-0'),10);
-            lucide.createIcons();
-        }
-        function closeModal(){ document.getElementById('modal-content').classList.add('scale-95','opacity-0'); setTimeout(()=>document.getElementById('product-modal').classList.add('hidden'),300); }
-        
-        // --- ADMIN & SLIDES ---
-        function handleAdminClick() { 
-            if(isAdminMode) { 
-                isAdminMode=false; 
-                document.getElementById('admin-add-btn').classList.add('hidden'); 
-                document.getElementById('admin-popup-btn').classList.add('hidden'); 
-                document.getElementById('admin-hero-edit-btn').classList.add('hidden'); 
-                document.getElementById('admin-flash-setting-btn').classList.add('hidden'); // Hide Flash Setting
-                renderGrid(currentCategory); 
-                showToast("Admin Logout"); 
-            } else { 
-                toggleMenu(); 
-                // Reset inputs when opening
-                document.getElementById('admin-id-input').value = '';
-                document.getElementById('admin-password-input').value = '';
-                document.getElementById('password-modal').classList.remove('hidden'); 
-            } 
-        }
-        function verifyAdminPassword(e) { 
-            e.preventDefault(); 
-            const inputId = document.getElementById('admin-id-input').value;
-            const inputPass = document.getElementById('admin-password-input').value;
-
-            if(inputId === ADMIN_ID && inputPass === ADMIN_PASSWORD) { 
-                isAdminMode=true; 
-                document.getElementById('password-modal').classList.add('hidden'); 
-                document.getElementById('admin-add-btn').classList.remove('hidden'); 
-                document.getElementById('admin-popup-btn').classList.remove('hidden'); 
-                document.getElementById('admin-hero-edit-btn').classList.remove('hidden'); 
-                document.getElementById('admin-flash-setting-btn').classList.remove('hidden'); // Show Flash Setting
-                renderGrid(currentCategory); 
-                showToast("Admin Mode Active"); 
-            } else { 
-                // Shake effect or simple alert
-                const modal = document.querySelector('#password-modal > div');
-                modal.classList.add('animate-bounce-short');
-                setTimeout(()=>modal.classList.remove('animate-bounce-short'), 500);
-                alert("ID atau Password Salah!"); 
-            } 
-        }
-        function closePasswordModal() { document.getElementById('password-modal').classList.add('hidden'); }
-        function deleteProduct(cat,id,e){ e.stopPropagation(); if(confirm("Delete Script?")) { products[cat]=products[cat].filter(x=>String(x.id)!==String(id)); saveProductsToStorage(); renderGrid(currentCategory); renderFlashSale(); } }
-        function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); setTimeout(()=>document.getElementById('admin-modal-content').classList.remove('scale-95','opacity-0'),10); }
-        function closeAdminModal() { document.getElementById('admin-modal-content').classList.add('scale-95','opacity-0'); setTimeout(()=>document.getElementById('admin-modal').classList.add('hidden'),300); }
-        function handleAdminSubmit(e) { 
-            e.preventDefault(); 
-            const cat = document.getElementById('input-category').value;
-            const file = document.getElementById('input-image-file').files[0];
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                const op = parseInt(document.getElementById('input-price').value);
-                const disc = parseInt(document.getElementById('input-discount').value);
-                const tags = Array.from(document.querySelectorAll('input[name="product-tags"]:checked')).map(c=>c.value);
-                const customLabel = document.getElementById('input-custom-tag').value.trim();
-                if(customLabel) tags.push(customLabel.toUpperCase());
-                const date = document.getElementById('input-date').value;
-                const active = document.getElementById('input-active').checked;
-                const accessKey = document.getElementById('input-access-key').value.trim();
-                const keyLink = document.getElementById('input-key-link').value.trim();
-                const contentKey = document.getElementById('input-content-key').value.trim(); // Capture Content Key
-
-                products[cat].unshift({
-                    id: Date.now().toString(),
-                    name: document.getElementById('input-name').value,
-                    originalPrice: op,
-                    price: op - (op*(disc/100)),
-                    discount: disc,
-                    desc: document.getElementById('input-desc').value,
-                    tags: tags,
-                    date: date || new Date().toISOString().split('T')[0],
-                    active: active, // Save Active Status
-                    accessKey: accessKey, // Save Unlock Password
-                    keyLink: keyLink, // Save Link to Get Password
-                    contentKey: contentKey, // Save the actual product content
-                    image: ev.target.result
-                });
-                saveProductsToStorage(); renderGrid(currentCategory); renderFlashSale(); closeAdminModal(); showToast("Script Added");
-                document.getElementById('add-product-form').reset(); 
-            };
-            if(file) reader.readAsDataURL(file);
-        }
-
-        // --- HERO CAROUSEL ---
-        function initHeroCarousel() {
-            const t = document.getElementById('hero-track'); const ind = document.getElementById('hero-indicators');
-            t.innerHTML=''; ind.innerHTML='';
-            heroSlides.forEach((s,i) => {
-                let html = '';
-                if(s.type==='product') {
-                    const p = products[s.category]?.find(x=>String(x.id)===String(s.productId));
-                    if(p) html = `<div class="min-w-full flex flex-col md:flex-row items-center gap-8 md:gap-16 px-8 md:px-16 py-8"><div class="md:w-1/2 z-10 flex flex-col items-start animate-slide-up text-white"><span class="bg-indigo-500/20 border border-indigo-500 text-indigo-300 text-xs font-mono font-bold px-3 py-1 rounded mb-6">${s.tagline}</span><h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">${p.name}</h1><p class="text-gray-400 mb-8 text-lg font-mono">Rp ${p.price.toLocaleString('id-ID')}</p><button onclick="openModal('${s.category}','${s.productId}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold transition-colors">View Details</button></div><div class="md:w-1/2 relative flex justify-center"><div class="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-700 w-full max-w-lg aspect-video"><img src="${p.image}" class="w-full h-full object-cover"></div></div></div>`;
-                } else {
-                    html = `<div class="min-w-full flex flex-col md:flex-row items-center gap-8 md:gap-16 px-8 md:px-16 py-8"><div class="md:w-1/2 z-10 flex flex-col items-start animate-slide-up text-white"><span class="bg-indigo-500/20 border border-indigo-500 text-indigo-300 text-xs font-mono font-bold px-3 py-1 rounded mb-6">${s.tagline||'PROMO'}</span><h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">${s.title}</h1><p class="text-gray-400 mb-8 text-lg">${s.desc}</p><a href="${s.link}" class="bg-white text-gray-900 hover:bg-gray-100 px-8 py-3 rounded-xl font-bold transition-colors">Browse Scripts</a></div><div class="md:w-1/2 relative flex justify-center"><div class="relative rounded-2xl overflow-hidden shadow-2xl border border-gray-700 w-full max-w-lg aspect-video"><img src="${s.image}" class="w-full h-full object-cover"></div></div></div>`;
-                }
-                if(html) {
-                    t.insertAdjacentHTML('beforeend', html);
-                    ind.insertAdjacentHTML('beforeend', `<button onclick="goToSlide(${i})" class="w-2 h-2 rounded-full transition-all ${i===0?'bg-indigo-500 w-6':'bg-gray-600'}"></button>`);
-                }
-            });
-            updateCarouselPos();
-            clearInterval(slideInterval); slideInterval=setInterval(nextSlide, 6000);
-        }
-        function updateCarouselPos() { document.getElementById('hero-track').style.transform=`translateX(-${currentSlideIndex*100}%)`; const dots=document.getElementById('hero-indicators').children; Array.from(dots).forEach((d,i)=>d.className=`w-2 h-2 rounded-full transition-all ${i===currentSlideIndex?'bg-indigo-500 w-6':'bg-gray-600'}`); }
-        function nextSlide(){ currentSlideIndex=(currentSlideIndex+1)%heroSlides.length; updateCarouselPos(); }
-        function prevSlide(){ currentSlideIndex=(currentSlideIndex-1+heroSlides.length)%heroSlides.length; updateCarouselPos(); }
-        function goToSlide(i){ currentSlideIndex=i; updateCarouselPos(); clearInterval(slideInterval); slideInterval=setInterval(nextSlide,6000); }
-        
-        // --- MANAGE SLIDES & POPUP (ADMIN) ---
-        function openHeroManageModal() { document.getElementById('hero-manage-modal').classList.remove('hidden'); setTimeout(()=>document.getElementById('hero-manage-content').classList.remove('scale-95','opacity-0'),10); renderActiveSlidesList(); populateProductDropdown(); }
-        function closeHeroManageModal() { document.getElementById('hero-manage-content').classList.add('scale-95','opacity-0'); setTimeout(()=>document.getElementById('hero-manage-modal').classList.add('hidden'),300); }
-        function renderActiveSlidesList() { 
-            const l = document.getElementById('active-slides-list'); l.innerHTML=''; 
-            heroSlides.forEach((s,i)=>{ l.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700"><span class="text-sm dark:text-white truncate w-3/4">${i+1}. ${s.type==='product'?s.productId:s.title}</span><button onclick="deleteHeroSlide(${i})" class="text-red-500 hover:bg-red-50 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`); }); 
-            lucide.createIcons();
-        }
-        function deleteHeroSlide(i){ if(confirm("Delete slide?")) { heroSlides.splice(i,1); renderActiveSlidesList(); initHeroCarousel(); } }
-        function populateProductDropdown() { const s = document.getElementById('hero-product-select'); s.innerHTML='<option value="">-- Select --</option>'; Object.keys(products).forEach(k=>products[k].forEach(p=> s.insertAdjacentHTML('beforeend', `<option value="${k}|${p.id}">${p.name}</option>`))); }
-        function toggleSlideType(t) { 
-            currentSlideType=t; 
-            document.getElementById('form-slide-product').classList.toggle('hidden', t!=='product'); 
-            document.getElementById('form-slide-custom').classList.toggle('hidden', t!=='custom');
-            document.getElementById('btn-type-product').classList.toggle('bg-indigo-500', t==='product'); document.getElementById('btn-type-product').classList.toggle('text-white', t==='product');
-            document.getElementById('btn-type-custom').classList.toggle('bg-indigo-500', t==='custom'); document.getElementById('btn-type-custom').classList.toggle('text-white', t==='custom');
-        }
-        function addHeroSlide() {
-            if(currentSlideType==='product') {
-                const v = document.getElementById('hero-product-select').value; if(!v) return;
-                const [c,i] = v.split('|');
-                heroSlides.push({type:'product', category:c, productId:i, tagline:document.getElementById('hero-prod-tagline').value});
-            } else {
-                const f = document.getElementById('hero-cust-image').files[0];
-                if(f) { const r=new FileReader(); r.onload=function(e){ heroSlides.push({type:'custom', title:document.getElementById('hero-cust-title').value, desc:document.getElementById('hero-cust-desc').value, tagline:document.getElementById('hero-cust-tagline').value, link:document.getElementById('hero-cust-link').value, image:e.target.result}); initHeroCarousel(); renderActiveSlidesList(); }; r.readAsDataURL(f); }
-            }
-            if(currentSlideType==='product') { initHeroCarousel(); renderActiveSlidesList(); }
-        }
-
-        // --- POPUP MANAGER ---
-        function openPopupManageModal() { 
-            document.getElementById('popup-manage-modal').classList.remove('hidden'); setTimeout(()=>document.getElementById('popup-manage-content').classList.remove('scale-95','opacity-0'),10); 
-            if(activePopupData) { document.getElementById('popup-status').value=activePopupData.status; document.getElementById('popup-manage-title').value=activePopupData.title; document.getElementById('popup-manage-msg').value=activePopupData.message; document.getElementById('popup-manage-link').value=activePopupData.link; }
-        }
-        function closePopupManageModal() { document.getElementById('popup-manage-content').classList.add('scale-95','opacity-0'); setTimeout(()=>document.getElementById('popup-manage-modal').classList.add('hidden'),300); }
-        function handlePopupSubmit(e) {
-            e.preventDefault();
-            const saveData = (img) => {
-                activePopupData = { status:document.getElementById('popup-status').value, title:document.getElementById('popup-manage-title').value, message:document.getElementById('popup-manage-msg').value, link:document.getElementById('popup-manage-link').value, image:img };
-                localStorage.setItem('powerhub_active_popup_v3', JSON.stringify(activePopupData)); closePopupManageModal(); showToast("Popup Saved");
-            };
-            const f = document.getElementById('popup-manage-image').files[0];
-            if(f) { const r=new FileReader(); r.onload=ev=>saveData(ev.target.result); r.readAsDataURL(f); }
-            else saveData(activePopupData?.image || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80");
-        }
-        function showWelcomePopup() { if(activePopupData?.status==='active') { document.getElementById('popup-img').src=activePopupData.image; document.getElementById('popup-title').innerText=activePopupData.title; document.getElementById('popup-msg').innerText=activePopupData.message; document.getElementById('welcome-popup').classList.remove('hidden'); } }
-        function closeWelcomePopup() { document.getElementById('welcome-popup').classList.add('hidden'); }
-        function openPopupLink() { closeWelcomePopup(); window.location.href=activePopupData.link||"#koleksi"; }
-        
-        // --- UTILS ---
-        function toggleCart() { const s=document.getElementById('cart-sidebar'); const o=document.getElementById('sidebar-overlay'); s.classList.toggle('translate-x-full'); o.classList.toggle('hidden', s.classList.contains('translate-x-full')); if(s.classList.contains('translate-x-full')) closeAllSidebars(); }
-        function toggleMenu() { const s=document.getElementById('mobile-sidebar'); const o=document.getElementById('sidebar-overlay'); s.classList.toggle('-translate-x-full'); o.classList.toggle('hidden', s.classList.contains('-translate-x-full')); }
-        function closeAllSidebars() { document.getElementById('mobile-sidebar').classList.add('-translate-x-full'); document.getElementById('cart-sidebar').classList.add('translate-x-full'); document.getElementById('sidebar-overlay').classList.add('hidden'); }
-        function showToast(m) { const t=document.getElementById('toast'); document.getElementById('toast-message').innerText=m; t.classList.remove('-translate-y-24','opacity-0'); setTimeout(()=>t.classList.add('-translate-y-24','opacity-0'),2000); }
-        function switchTab(c) { renderGrid(c); }
-        function openCartFromMenu() { document.getElementById('mobile-sidebar').classList.add('-translate-x-full'); document.getElementById('cart-sidebar').classList.remove('translate-x-full'); document.getElementById('sidebar-overlay').classList.remove('hidden'); }
-
-        window.onload = function() {
-            loadProductsFromStorage();
-            initHeroCarousel();
-            renderGrid('semua');
-            renderFlashSale();
-            initCountdown();
-            
-            // Check for Invoice Link
-            const p = new URLSearchParams(window.location.search);
-            if(p.has('order')) {
-                try {
-                    const od = JSON.parse(atob(p.get('order')));
-                    const c = document.getElementById('invoice-items'); c.innerHTML=''; let tot=0;
-                    od.forEach(i => {
-                        let prod = null; Object.keys(products).forEach(k=>{ const f=products[k].find(x=>String(x.id)===String(i.i)); if(f) prod=f; });
-                        if(prod) { tot+=prod.price; c.insertAdjacentHTML('beforeend', `<div class="flex gap-3 items-center p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700"><img src="${prod.image}" class="w-10 h-10 rounded object-cover"><div class="flex-1"><h4 class="text-sm font-bold dark:text-white">${prod.name}</h4><div class="text-xs text-indigo-500 font-bold">Rp ${prod.price.toLocaleString('id-ID')}</div></div></div>`); }
-                    });
-                    document.getElementById('invoice-total').innerText = `Rp ${tot.toLocaleString('id-ID')}`;
-                    document.getElementById('invoice-modal').classList.remove('hidden');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } catch(e) {}
-            }
-
-            setTimeout(()=>showWelcomePopup(), 1000);
-        }
-    </script>
-</body>
-</html>
+            pcall(function() loadstring(game:HttpGet(MAIN_SCRIPT_URL))() end)
+        else
+            task.spawn(function() ShowNotification("Invalid Key! Try again.", true) end)
+            InputBox.Text = ""
+            InputBox.TextEditable = true
+            ConfirmBtn.Text = "CONFIRM"
+        end
+    else
+        task.spawn(function() ShowNotification("Connection Failed!", true) end)
+        InputBox.TextEditable = true
+        ConfirmBtn.Text = "CONFIRM"
+    end
+end)
+
+--// DRAGGABLE
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)
