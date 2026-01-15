@@ -18,7 +18,7 @@ local KEY_DATABASE_URL = "https://raw.githubusercontent.com/power-datebase/datab
 local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/power-datebase/manu-utama/refs/heads/main/231011402540123.lua"
 
 -- Link Tombol
-local KEY_LINK = "https://powerhubofficial.netlify.app/"
+local KEY_LINK = "https://sfl.gl/kmwj4je"
 local DISCORD_LINK = "https://discord.gg/exb7hSPZg"
 
 -- Nama file untuk simpan data di HP
